@@ -1,9 +1,8 @@
-from typing import Any, List, Union
+from typing import List, Union
+import asyncio
 
 import discord
-from discord.ext.commands import Bot, command
-
-from .boards import Board, BoardError
+from discord.ext.commands import Bot, command, Cog
 
 
 class GameError(Exception):
@@ -11,30 +10,25 @@ class GameError(Exception):
 
 
 class Game:
-    def __init__(self, game_name: str, players: List[discord.User], pass_text_input=False, pass_button_events=False, *args, **kwargs):
+    def __init__(self, game_name: str, player: discord.User, channel, pass_text_input=False, pass_button_events=False,
+                 *args, **kwargs):
         self.game_name = game_name
-        self.players = players
+        self.player = player
+        self.channel = channel
+
         self.needs_text_input = pass_text_input
         self.needs_button_events = pass_button_events
+
         self._stats = {}
 
-        self.stdin = []
+    def on_text_event(self, player: discord.User, text: str):
+        pass
 
-    def read(self):
-        while not self.stdin:
-            pass
-        event, values = self.stdin[0]
-        self.stdin.pop()
-        return event, values
-
-    def pass_stdin(self, stdin: List[Union[str, dict]]):
-        self.stdin.append(stdin)
-
-    def __init_subclass__(*cls, **kwargs):
-        print(*cls, kwargs, sep=' -> ')
+    def on_button_event(self, player: discord.User, emoji: str):
+        pass
 
     def __repr__(self):
-        return '<{} name: {}, players: {}, stats: {}>'.format(type(self).__name__, self.game_name, self.players, self._stats)
+        return '<{} name: {}, players: {}, stats: {}>'.format(type(self).__name__, self.game_name, self.player, self._stats)
 
 
 class GameHost(Bot):
@@ -45,30 +39,52 @@ class GameHost(Bot):
         super().__init__(
             command_prefix,
             activity=discord.Activity(
-                name='',
-                type=discord.ActivityType.listening,
-                state='My State',
-                details='My Custom Details'
+                name='Your Games',
+                type=discord.ActivityType.watching
+            ))
+
+        self.add_cog(Commands(self))
+
+    @asyncio.coroutine
+    def on_message(self, message):
+        if message.author != self.user:
+            for game in self._game_instances:
+                if game.needs_text_input:
+                    game.on_text_event(message.author, message.content)
+            yield from self.process_commands(message)
+
+    async def on_reaction_add(self, reaction, user):
+        if user != self.user:
+            for game in self._game_instances:
+                if game.needs_button_events:
+                    game.on_button_event(user, reaction)
+
+    async def on_command_error(self, context, exception):
+        guild = self.get_guild(710152655141339168)
+        channel = guild.get_channel(710168025940230205)
+        await channel.send(
+            "```Exception: {}\nFrom: <User {}> in #{} from the <{}>```".format(
+                exception,
+                context.message.author,
+                context.message.channel,
+                context.message.channel.guild))
+
+    async def on_ready(self):
+        guild = self.get_guild(710152655141339168)
+        channel = guild.get_channel(710168025940230205)
+        print(*[' '.join([item[0], repr(item[1])]) for item in self.all_commands.items()], sep='\n')
+        await channel.send(
+            '**I am ready as {}**\n    Serving __{}__ servers.\n**Servers:**\n{}'.format(
+                self.user,
+                len(self.guilds),
+                '\n'.join(
+                    ['- ' + guild.name for guild in self.guilds]
+                )
             )
         )
 
-    async def on_command_error(self, context, exception):
-        guild = await self.get_guild(710152655141339168)
-        channel = await guild.get_channel(710168025940230205)
-        channel.send("Exception: {}\nFrom: {}".format(exception, context))
-        context.send("Exception: {}\nFrom: {}".format(exception, context))
-
-    async def on_message(self, message):
-        for game in self._game_instances:
-            game.pass_stdin(['text_input', {message.author: message.content}])
-
-    @command()
-    async def play(self, ctx, game_name):
-        new_game = [game_name, self._game_types[game_name](player=ctx.author)]
-        self._game_instances.append(new_game)
-
     def add_game(self, game):
-        if not issubclass(game, Game) or not issubclass(game, TextGame) or not issubclass(game, GraphicGame):
+        if not issubclass(game, Game):
             raise TypeError('{} does not derive from a Game subclass or class.'.format(game))
         if not hasattr(game, 'game_name'):
             raise AttributeError('{} doesn\'t have a game name.'.format(game))
@@ -78,37 +94,16 @@ class GameHost(Bot):
     def remove_game(self, game):
         del self._game_types[game]
 
-
-class TextGame(Game):
-    def __init__(self, game_name: str, players: List[discord.User]):
-        super().__init__(game_name, players, needs_text_input=True)
-
-    def __init_subclass__(*cls, **kwargs):
-        print(*cls, kwargs, sep=' -> ')
+    def play_game(self, game: str, player: discord.User, location: discord.Guild):
+        new_game = self._game_types[game](player=player, location=location)
+        self._game_instances.append(new_game)
 
 
-class GraphicGame(Game):
-    def __init__(self, game_name: str, players: List[discord.User], board: Board, buttons: list):
-        super().__init__(game_name, players, pass_button_events=True)
-        self.board = board
-        self.buttons = buttons
-        self._board = None
+class Commands(Cog):
+    def __init__(self, bot: GameHost):
+        self.bot = bot
 
-    def __init_subclass__(*cls, **kwargs):
-        print(*cls, kwargs, sep=' -> ')
-
-    @property
-    def board(self):
-        return self._board
-
-    @board.setter
-    def board(self, new_msg):
-        pass
-
-    async def create_embed(self, channel):
-        if self.msg is None:
-            self.msg = await channel.send(embed=self.board.embed())
-        else:
-            raise BoardError('Board for game {} is already initialized, to update the board edit the self.board'.format(self))
-
-
+    @command(help="Play a Game.")
+    async def play(self, ctx, game: str):
+        self.bot.play_game(game, ctx.author, ctx.channel.guild)
+        # await ctx.send('You are playing {}!'.format(game))
