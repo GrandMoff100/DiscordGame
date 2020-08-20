@@ -1,8 +1,11 @@
-from typing import List, Union
 import asyncio
+import os
+import threading
 
 import discord
 from discord.ext.commands import Bot, command, Cog
+
+from .board import Board
 
 
 class GameError(Exception):
@@ -10,16 +13,15 @@ class GameError(Exception):
 
 
 class Game:
-    def __init__(self, game_name: str, player: discord.User, channel, pass_text_input=False, pass_button_events=False,
-                 *args, **kwargs):
+    def __init__(self, game_name: str, player: discord.User, channel, board: Board, pass_text_input=False, pass_button_events=False):
         self.game_name = game_name
         self.player = player
         self.channel = channel
 
+        self.board = board
+
         self.needs_text_input = pass_text_input
         self.needs_button_events = pass_button_events
-
-        self._stats = {}
 
     def on_text_event(self, player: discord.User, text: str):
         pass
@@ -50,14 +52,17 @@ class GameHost(Bot):
         if message.author != self.user:
             for game in self._game_instances:
                 if game.needs_text_input:
-                    game.on_text_event(message.author, message.content)
+                    threading.Thread(target=game.on_text_event, args=[message.author, message.content])
+
             yield from self.process_commands(message)
 
     async def on_reaction_add(self, reaction, user):
         if user != self.user:
             for game in self._game_instances:
                 if game.needs_button_events:
-                    game.on_button_event(user, reaction)
+                    threading.Thread(target=game.on_button_event, args=[user, reaction])
+
+        await reaction.message.remove_reaction(reaction, user)
 
     async def on_command_error(self, context, exception):
         guild = self.get_guild(710152655141339168)
@@ -105,5 +110,9 @@ class Commands(Cog):
 
     @command(help="Play a Game.")
     async def play(self, ctx, game: str):
-        self.bot.play_game(game, ctx.author, ctx.channel.guild)
-        # await ctx.send('You are playing {}!'.format(game))
+        try:
+            self.bot.play_game(game, ctx.author, ctx.channel.guild)
+            await ctx.send('You are playing {}!'.format(game))
+        except KeyError:
+            await ctx.send("I'm sorry to tell you this but that game can't be played.")
+
