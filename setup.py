@@ -8,5 +8,6 @@ setup(
     license='GNU License',
     author='Pixymon',
     author_email='nlarsen23.student@gmail.com',
+    install_require=['discord'],
     description='A Python Discord Library for developing games in Discord Servers.'
 )
