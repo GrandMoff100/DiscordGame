@@ -1,9 +1,0 @@
-README.md
-setup.py
-Discordgame.egg-info/PKG-INFO
-Discordgame.egg-info/SOURCES.txt
-Discordgame.egg-info/dependency_links.txt
-Discordgame.egg-info/top_level.txt
-discordgame/__init__.py
-discordgame/board.py
-discordgame/game.py
