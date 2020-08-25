@@ -137,7 +137,6 @@ class GameHost(Bot):
                     await game.on_button_event(user, reaction)
             await reaction.message.remove_reaction(reaction, user)
 
-    '''
     async def on_command_error(self, context, exception):
         guild = self.get_guild(710152655141339168)
         channel = guild.get_channel(710168025940230205)
@@ -148,7 +147,6 @@ class GameHost(Bot):
                 context.message.channel,
                 context.message.channel.guild
             ))
-    '''
 
     async def on_ready(self):
         guild = self.get_guild(710152655141339168)
@@ -178,7 +176,6 @@ class GameHost(Bot):
         new_game = self._game_types[game](ctx=ctx)
         await new_game.initgame()
         self._game_instances.append(new_game)
-
 
 
 class Commands(Cog):

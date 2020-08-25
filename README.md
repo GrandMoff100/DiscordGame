@@ -73,8 +73,8 @@ class MadLib(dg.Game):
 
 
 ## Testing and Issues
-We welcome any new insights and issues with this framework.
-To make an issue go to issues page on our repository https://github.com/GrandMoff100/DiscordGame and open an issue.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;We welcome any new insights and issues with this framework.
+To make an issue, head over to the issues page on our repository -> https://github.com/GrandMoff100/DiscordGame and open a new issue.
 We look forward working on fixing any bugs or issues that we might have missed.
 
 ## Contribution
