@@ -1,13 +1,50 @@
 from setuptools import setup
+import requests
+import datetime
+import subprocess
+import os
+
+__project_name__ = 'DiscordGame'
+
+with open('README.md', encoding='utf-8') as file:
+    long_description = file.read()
+
+__project_url__ = f'https://pypi.python.org/pypi/{__project_name__}/json'
+__old_version__ = requests.get(__project_url__).json()
+__old_version__ = __old_version__['info']['version']
+__now__ = datetime.datetime.now()
+try:
+    __new_version__ = '{}.{}.{}.{}'.format(__now__.year, __now__.month, __now__.day, int(__old_version__.split('.')[3]) + 1)
+except IndexError:
+    __new_version__ = '{}.{}.{}.{}'.format(__now__.year, __now__.month, __now__.day, 0)
+
 
 setup(
-    name='Discordgame',
-    version='0.0.0',
+    name=__project_name__,
+    version=__new_version__,
     packages=['discordgame'],
     url='https://github.com/GrandMoff100/Discordgame',
     license='GNU License',
     author='Pixymon',
     author_email='nlarsen23.student@gmail.com',
-    install_require=['discord'],
-    description='A Python Discord Library for developing games in Discord Servers.'
+    install_require=['discord', 'requests'],
+    description='A Python Discord Library for developing games in Discord Servers.',
+    long_description=long_description,
+    long_description_content_type='text/markdown'
 )
+
+user_env = os.environ.copy()
+directories = ['dist/', 'build/', __project_name__ + '.egg-info/']
+twine = subprocess.Popen(['twine', 'upload', 'dist/*'], env=user_env)
+
+def recursively_delete_directory(directory: str):
+    for file in os.listdir(directory):
+        if os.path.isdir(os.path.join(directory, file)):
+            recursively_delete_directory(os.path.join(directory, file))
+        elif os.path.isfile(os.path.join(directory, file)):
+            os.remove(os.path.join(directory, file))
+    os.rmdir(directory)
+
+print(twine.communicate())
+for directory in directories:
+    recursively_delete_directory(directory)
