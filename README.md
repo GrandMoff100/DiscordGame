@@ -32,7 +32,7 @@ import discordgame as dg
 
 > Here's a couple of examples to help you get the gist of how this framework works...
 
-- *A Simple MadLib made with discordgame:*
+- *A Simple MadLib made with ``discordgame``:*
 ```python
 import discord
 import discordgame as dg
