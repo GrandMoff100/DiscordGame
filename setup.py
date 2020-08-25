@@ -28,7 +28,7 @@ setup(
     license='GNU License',
     author='Pixymon',
     author_email='nlarsen23.student@gmail.com',
-    install_require=['discord', 'requests'],
+    install_requires=['discord', 'requests'],
     description='A Python Discord Library for developing games in Discord Servers.',
     long_description=long_description,
     long_description_content_type='text/markdown'
