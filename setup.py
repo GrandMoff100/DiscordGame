@@ -37,7 +37,7 @@ setup(
 if sys.argv[1] in ['sdist', 'bdist_wheel']:
     user_env = os.environ.copy()
     directories = ['dist/', 'build/', __project_name__ + '.egg-info/']
-    twine = subprocess.Popen(['twine', 'upload', 'dist/*'], env=user_env)
+    twine = subprocess.Popen(['twine', 'upload', 'dist/*'], env=user_env, cwd=os.getcwd())
 
     def recursively_delete_directory(directory: str):
         for file in os.listdir(directory):
