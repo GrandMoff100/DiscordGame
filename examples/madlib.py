@@ -1,8 +1,8 @@
 import discord
-from discordgame import Game
+import discordgame as dg
 
 
-class MadLib(Game):
+class MadLib(dg.Game):
     game_name = 'MadLib'
 
     def __init__(self, ctx):
