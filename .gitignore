@@ -1,6 +1,9 @@
+.env
 .idea/
 venv/
 build/
 dist/
 *.pyc
 *.egg-info/
+.replit
+.vscode/
