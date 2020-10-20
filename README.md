@@ -26,8 +26,6 @@ those events are passed to all games that are registered to a GameHost object.
 As you can see here with the on_text_event and on_button_event...
 ```python
 import discordgame as dg
-
-
 ```
 
 > Here's a couple of examples to help you get the gist of how this framework works...

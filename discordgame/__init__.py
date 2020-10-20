@@ -1,1 +1,2 @@
-from .game import GameHost, Game
+from .games import Game
+from .gamehosts import GameHost
