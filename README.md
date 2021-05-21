@@ -30,6 +30,9 @@ import discordgame as dg
 
 > Here's a couple of examples to help you get the gist of how this framework works...
 
+> These examples assume you have cloned the repository and have the examples folder downloaded.
+
+
 - *A Simple MadLib made with ``discordgame``:*
 ```python
 import discord
@@ -66,6 +69,26 @@ class MadLib(dg.Game):
 
 - *A Cool Snake Game made with ``discordgame``:*
 
+Still developing a frame based example (mostly because I'm lazy and some of the library features aren't implemented yet)
+
+- And then loading the games (see examples/example.py)
+
+```py
+from discordgame import GameHost
+
+# Import our example games from 2 other files in the examples directory.
+from .snake import Snake
+from .madlib import MadLib
+
+host = GameHost('*')
+
+# Add our Games to the GameHost so users can play them.
+host.add_game(Snake)
+host.add_game(MadLib)
+
+# Add run the GameHost.
+host.run(TOKEN)
+```
 
 ### More Features
 
